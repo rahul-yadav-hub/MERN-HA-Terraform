@@ -1,0 +1,25 @@
+---
+# playbook.yml
+- name: 'Provision Image'
+  hosts: default
+
+  tasks:
+    - name: Run apt update
+      shell: sudo apt update -y
+    - name: Update repo for nodejs
+      shell: curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    - name: Install NodeJS
+      shell: sudo apt install nodejs -y
+    - name: Install pm2
+      shell: sudo npm install pm2 -g
+    - name: Set env for pm2
+      shell: sudo env PATH=$PATH:/usr/local/bin pm2 startup -u ubuntu
+    - name: Download CW agent
+      ansible.builtin.get_url:
+        url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+        dest: /home/ubuntu/
+        mode: '0440'
+    - name: Install CW Agent
+      shell: sudo dpkg -i /home/ubuntu/amazon-cloudwatch-agent.deb
+    - name: Start CW Agent
+      shell: sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:AmazonCloudWatch-rahul -s

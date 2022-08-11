@@ -1,0 +1,137 @@
+
+- hosts: tag_Name_Rahul_Mongo_P
+  gather_facts: no
+  tasks:
+        - name: Sleep for 180 seconds and continue with play
+          ansible.builtin.wait_for:
+            timeout: 180
+          delegate_to: localhost
+        - name: Copy MongoDB Configuration file
+          copy :
+            src : /root/squareOps/ansible/mern-tf/MERN-CI-CD/AWS/Storage/mongod.conf
+            dest : /etc/mongod.conf
+
+        - name: Restart MongoD service
+          service:
+            name : mongod
+            state : restarted
+            enabled : yes
+
+- hosts: tag_Name_Rahul_Mongo_S1
+  gather_facts: no
+  tasks:
+        - name: Copy MongoDB Configuration file
+          copy :
+            src : /root/squareOps/ansible/mern-tf/MERN-CI-CD/AWS/Storage/mongod.conf
+            dest : /etc/mongod.conf
+
+        - name: Restart MongoD service
+          service:
+            name : mongod
+            state : restarted
+            enabled : yes
+
+- hosts: tag_Name_Rahul_Mongo_S2
+  gather_facts: no
+  tasks:
+        - name: Copy MongoDB Configuration file
+          copy :
+            src : /root/squareOps/ansible/mern-tf/MERN-CI-CD/AWS/Storage/mongod.conf
+            dest : /etc/mongod.conf
+
+        - name: Restart MongoD service
+          service:
+            name : mongod
+            state : restarted
+            enabled : yes
+
+
+- hosts: tag_Name_Rahul_Mongo_P
+  gather_facts: no
+  tasks:
+        - name: Initialize Replica set on Primary
+          community.mongodb.mongodb_shell:
+            eval: "rs.initiate()"
+
+        - name: Add members to primary instance
+          community.mongodb.mongodb_shell:
+            eval: "rs.add('secondary1_private_ip:27017')"
+ 
+        - name: Add members to primary instance
+          community.mongodb.mongodb_shell:
+            eval: "rs.add('secondary2_private_ip:27017')"
+      
+        - name: Create user for authentication in primary instance
+          community.mongodb.mongodb_shell:
+            db: "admin"
+            eval: "db.createUser({user: 'sqops' , pwd: 'sqops321' , roles:[{role: 'userAdminAnyDatabase' , db:'admin'}]})"
+
+        - name: Generate Key for authorization
+          shell: | 
+             openssl rand -base64 756 > /etc/key
+             chmod 400 /etc/key
+             chown mongodb:mongodb /etc/key
+ 
+        - name: Copy key file from remote to Control Node
+          ansible.builtin.fetch:
+            src: /etc/key
+            dest: /tmp/key
+
+        - name: Copy New MongoDB Conf with Authorization enabled
+          copy :
+            src : /root/squareOps/ansible/mern-tf/MERN-CI-CD/AWS/Storage/mongod-new.conf
+            dest : /etc/mongod.conf
+
+        - name: Restart MongoD service
+          service:
+            name : mongod
+            state : restarted
+            enabled : yes
+
+- hosts: tag_Name_Rahul_Mongo_S1
+  gather_facts: no
+  tasks:
+        - name: Copy new MongoDB Configuration file
+          copy :
+            src : /root/squareOps/ansible/mern-tf/MERN-CI-CD/AWS/Storage/mongod-new.conf
+            dest : /etc/mongod.conf
+
+        - name: Copy new MongoDB Configuration file
+          copy :
+            src : /tmp/key/primary_public_ip/etc/key
+            dest : /etc/key
+
+        - name: Change key permissions
+          shell: |
+              chmod 400 /etc/key
+              chown mongodb:mongodb /etc/key
+
+        - name: Restart MongoD service
+          service:
+            name : mongod
+            state : restarted
+            enabled : yes
+
+- hosts: tag_Name_Rahul_Mongo_S2
+  gather_facts: no
+  tasks:
+        - name: Copy new MongoDB Configuration file
+          copy :
+            src : /root/squareOps/ansible/mern-tf/MERN-CI-CD/AWS/Storage/mongod-new.conf
+            dest : /etc/mongod.conf
+
+        - name: Copy new MongoDB Configuration file
+          copy :
+            src : /tmp/key/primary_public_ip/etc/key
+            dest : /etc/key
+
+        - name: Change key permissions
+          shell: |
+              chmod 400 /etc/key
+              chown mongodb:mongodb /etc/key
+
+        - name: Restart MongoD service
+          service:
+            name : mongod
+            state : restarted
+            enabled : yes

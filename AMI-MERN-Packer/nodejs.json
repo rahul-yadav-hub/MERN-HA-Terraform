@@ -1,0 +1,44 @@
+{
+    "variables": {
+      "access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+      "secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}"
+    },
+
+"sensitive-variables": ["access_key", "secret_key"],
+"builders": [
+  {
+    "type": "amazon-ebs",
+    "access_key": "{{user `access_key`}}",
+    "secret_key": "{{user `secret_key`}}",
+    "region": "us-west-2",
+    "ami_name": "Rahul-Packer-Nodejs-v1",
+    "source_ami": "ami-0ddf424f81ddb0720",
+    "temporary_iam_instance_profile_policy_document": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "ssm:GetParameter"
+                ],
+                "Resource": "arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*"
+            }
+        ]
+    },
+    "instance_type": "t3a.small",
+    "ssh_username": "ubuntu"
+  }
+],
+"provisioners": [
+    {
+      "type": "ansible",
+      "playbook_file": "./playbook.yml"
+    }
+  ],
+"post-processors": [
+  {
+    "type": "manifest",
+    "output": "output.json"
+  }
+]
+}
