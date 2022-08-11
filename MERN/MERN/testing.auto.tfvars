@@ -51,7 +51,7 @@ record_type              = "A"                           #"A"          # if true
 
 // Amplify Variables
 repo_url                 = "https://github.com/rahul-yadav-hub/react-redux-realworld-example-app.git"
-github_access_token      = "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"
+github_access_token      = ""
 branch_name              = "main"
 backend_url              = "https://rahul-backend.rtd.squareops.co.in/api/"
 subdomain_name_amp       = "rahul-frontend"
